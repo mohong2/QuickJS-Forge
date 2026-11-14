@@ -1,0 +1,19 @@
+{
+  "name": "psychjs",
+  "url": "https://github.com/quickjs-forge/psychjs",
+  "license": "MIT",
+  "tags": [
+    "psych-engine",
+    "javascript",
+    "quickjs",
+    "fnf",
+    "scripting"
+  ],
+  "description": "JavaScript mod scripting for Psych Engine on top of hxquickjs: Lua-surface parity plus JS-native ergonomics.",
+  "version": "0.1.0",
+  "classPath": "hx",
+  "dependencies": {
+    "hxquickjs": ""
+  },
+  "releasenote": "M0: skeleton + parity matrix. Adapter port starts at M2."
+}

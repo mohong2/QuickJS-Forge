@@ -1,0 +1,27 @@
+# build output
+_build/
+bin/
+obj/
+build/
+*.obj
+*.lib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+
+# reference checkouts (never part of this repo)
+_reference/
+
+# haxe
+.haxelib/
+export/
+dump/
+*.n
+
+# editors / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

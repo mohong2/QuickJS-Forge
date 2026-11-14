@@ -1,0 +1,30 @@
+<xml>
+<!-- hxcpp build fragment for hxquickjs.
+     Include from a project with:
+         <include name="${haxelib:hxquickjs}/native/Build.xml" />
+     Requires native/bin/<platform>/qjs.lib (build with tools/build-quickjs.ps1). -->
+
+<set name="QJS_ROOT" value="${haxelib:hxquickjs}/native" />
+
+<files id="qjs_bridge">
+  <compilerflag value="-I${QJS_ROOT}/bridge" />
+  <compilerflag value="-I${QJS_ROOT}/quickjs" />
+  <file name="${QJS_ROOT}/bridge/qjs_bridge.cpp" />
+</files>
+
+<files id="haxe">
+  <files id="qjs_bridge" />
+  <section if="windows">
+    <lib name="${QJS_ROOT}/bin/windows-x64/qjs.lib" />
+  </section>
+  <section if="android">
+    <lib name="${QJS_ROOT}/bin/android-${ANDROID_ARCH}/libqjs.a" />
+  </section>
+  <section if="linux">
+    <lib name="${QJS_ROOT}/bin/linux-x64/libqjs.a" />
+  </section>
+  <section if="mac">
+    <lib name="${QJS_ROOT}/bin/mac/libqjs.a" />
+  </section>
+</files>
+</xml>

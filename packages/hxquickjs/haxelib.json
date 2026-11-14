@@ -1,0 +1,17 @@
+{
+  "name": "hxquickjs",
+  "url": "https://github.com/quickjs-forge/hxquickjs",
+  "license": "MIT",
+  "tags": [
+    "quickjs",
+    "javascript",
+    "cpp",
+    "scripting",
+    "embedded"
+  ],
+  "description": "Real QuickJS for Haxe/hxcpp: full ES2023 execution, flat C ABI, bytecode caching, frame-budget guardrails.",
+  "version": "0.1.0",
+  "classPath": "hx",
+  "dependencies": {},
+  "releasenote": "M0: native core, probe suite, benchmarks. Not yet API-stable."
+}

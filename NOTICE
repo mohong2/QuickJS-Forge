@@ -1,0 +1,12 @@
+QuickJS-Forge bundles QuickJS-NG, distributed under the MIT license:
+
+    QuickJS / QuickJS-NG
+    Copyright (c) 2017-2024 Fabrice Bellard
+    Copyright (c) 2024 QuickJS-NG contributors (Charlie Gordon and others)
+    https://github.com/quickjs-ng/quickjs
+
+QuickJS-NG lives in native/quickjs as a pinned submodule and is not modified.
+Any future patch lives in native/patches/ next to a .md file explaining why.
+
+This project is not affiliated with Psych Engine, its authors, or any
+third-party engine fork. Names are used descriptively only.
