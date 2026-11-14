@@ -6,36 +6,31 @@
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-QuickJS-Forge 是一个原生桥 + 一个 Haxe 绑定 + 一个 Psych Engine 适配层。它把 [quickjs-ng](https://github.com/quickjs-ng/quickjs) 静态编进你的程序，让脚本调用和宿主回调都保持在几十纳秒的量级，而不是每次调用都序列化一次 JSON。
+QuickJS-Forge 是一个原生桥加一个 Haxe 绑定：把 [quickjs-ng](https://github.com/quickjs-ng/quickjs) 静态编进你的程序，让脚本调用和宿主回调都保持在几十纳秒的量级，而不是每次调用都序列化一次 JSON。它不绑定任何引擎。
 
-```
-┌─────────────────────────────────────────────┐
-│ 你的游戏（hxcpp / Psych Engine）             │
-│   psychjs：265 个与 FunkinLua 同名的 API     │
-├─────────────────────────────────────────────┤
-│ hxquickjs：JsContext / JsValue / Marshal     │
-├─────────────────────────────────────────────┤
-│ qjs_bridge：扁平 C ABI（int32 / double / *）  │
-├─────────────────────────────────────────────┤
-│ quickjs-ng 0.18（静态库）                    │
-└─────────────────────────────────────────────┘
-```
+| 层 | 内容 |
+|---|---|
+| 应用 | 你的游戏或工具（hxcpp） |
+| 绑定 | `hxquickjs`：JsContext / JsValue / Marshal |
+| ABI | `qjs_bridge`：扁平 C ABI（`int32` / `double` / `const char*`） |
+| 引擎 | quickjs-ng 0.18（静态库） |
 
 ## 目录
 
 - [特性](#特性)
 - [安装](#安装)
 - [快速开始](#快速开始)
-- [Psych Engine 适配](#psych-engine-适配)
 - [API](#api)
 - [性能](#性能)
 - [设计要点](#设计要点)
 - [平台支持](#平台支持)
+- [可选：迁移 Psych Engine 脚本](#可选迁移-psych-engine-脚本)
 - [常见问题](#常见问题)
 - [许可](#许可)
 
 ## 特性
 
+- **引擎无关**：只依赖 hxcpp 与 C 运行时，任何 Haxe 项目都能用，不需要为某个引擎改代码。
 - **完整语法**：ES2023。类与私有字段、静态块、生成器、`async`/`await`、async generator、BigInt、Proxy、TypedArray、正则命名组与后行断言、顶层 await。
 - **低开销**：C→JS 调用 34–38 ns，JS→C 回调 82–110 ns，`setProperty` 19–21 ns（预绑定 12–13 ns）。
 - **静态链接**：Windows 下与 hxcpp 同为 `/MT`，不引入 DLL、不需要 MinGW 运行时、不用配搜索路径。
@@ -75,7 +70,7 @@ pwsh tools/build-quickjs.ps1     # Windows -> native/bin/windows-x64/qjs.lib
 
 ### 作为 haxelib
 
-本仓库包含两个包，`packages/hxquickjs` 与 `packages/psychjs`。开发时直接指向目录：
+主包是 `packages/hxquickjs`；`packages/psychjs` 是可选的 Psych Engine 迁移层，用不到可以不管。开发时直接指向目录：
 
 ```bash
 haxelib dev hxquickjs packages/hxquickjs
@@ -132,47 +127,6 @@ js.dispose();
 var onUpdate:Int = js.getHandle("onUpdate");   // 句柄，长期持有
 js.callHandle(onUpdate, [elapsed], js.global());
 ```
-
-## Psych Engine 适配
-
-`psychjs` 把 `FunkinLua` 的 API 面平移到 JavaScript：函数同名、参数同序、回调同名。函数清单可以从任意 `FunkinLua.hx` 抽出来核对：
-
-```bash
-node tools/gen-api-matrix.js "<Psych>/source/psychlua/FunkinLua.hx|psych-1.0" \
-                             "<Fork>/source/script/lua/FunkinLua.hx|psych-0.6.3"
-```
-
-0.6.3 系分支注册 265 个函数，Psych 1.0 系 125 个且是前者子集。
-
-```js
-// mods/mymod/scripts/script.js
-function onCreate() {
-	makeLuaSprite("bg", "bg", -600, -200);
-	setProperty("bg.alpha", 0.8);
-	addLuaSprite("bg");
-}
-
-function onUpdate(elapsed) {
-	setProperty("bg.x", getProperty("bg.x") + elapsed * 10);
-}
-
-function onBeatHit() {
-	doTweenAngle("spin", "bg", 360, 0.4, "quadInOut");
-}
-```
-
-平移规则：
-
-| 规则 | 说明 |
-|---|---|
-| 同名 | `makeLuaSprite` 仍叫 `makeLuaSprite`，老 mod 改语法不改名字 |
-| 别名 | 另提供 `sprite.setPosition(x, y)` 这类写法，但不替代原名 |
-| 空值 | Lua 的 `nil` → JS 的 `undefined` |
-| 可变参数 | Lua 的 `...` → rest 参数 |
-| 数字 | 统一为 `Float`（QuickJS 只有一种数字） |
-| 回调 | 与 `FunkinLua` 同名同参，`Function_Stop` 等常量映射为同名全局 |
-
-每个脚本一个 `JsContext`：一个脚本崩溃不影响其他脚本，连续 3 次未捕获异常后自动停用并在控制台打印脚本路径。
 
 ## API
 
@@ -342,6 +296,27 @@ cmake --build build-android --target qjs -j
 
 产物放到 `native/bin/android-arm64-v8a/libqjs.a`，`native/Build.xml` 会按 `ANDROID_ARCH` 找它。
 
+## 可选：迁移 Psych Engine 脚本
+
+如果手上有一堆 Psych Engine 的 Lua mod，`packages/psychjs` 提供了一个迁移层：`FunkinLua` 的函数与回调同名同参，脚本改语法、不改调用。
+
+```js
+// mods/mymod/scripts/script.js
+function onCreate() {
+	makeLuaSprite("bg", "bg", -600, -200);
+	setProperty("bg.alpha", 0.8);
+	addLuaSprite("bg");
+}
+
+function onUpdate(elapsed) {
+	setProperty("bg.x", getProperty("bg.x") + elapsed * 10);
+}
+```
+
+规则：函数同名（`makeLuaSprite` 仍叫 `makeLuaSprite`）、`nil` → `undefined`、`...` → rest、数字统一 `Float`、回调同名同参（`onCreate` / `onUpdate` / `onBeatHit`…）。每个脚本一个独立 `JsContext`，连续 3 次未捕获异常后自动停用。
+
+它不在关键路径上：不装 `psychjs`，这个库仍然是给任意 hxcpp 项目用的 JavaScript 运行时。
+
 ## 目录结构
 
 ```
@@ -398,7 +373,7 @@ MIT。QuickJS-NG 亦为 MIT，见 [NOTICE](NOTICE)。
 - 34–38 ns per C→JS call, 82–110 ns per JS→C callback, 19–21 ns per property write (12–13 ns pre-bound), 0.5–0.8 µs per bytecode load.
 - Static linkage with a matching CRT (`/MT` on Windows); no DLLs, no MinGW runtime, no search paths.
 - Bytecode cache, frame-budget interrupt, memory and stack limits, per-script circuit breaker.
-- Psych Engine adapter that mirrors the `FunkinLua` API by name and argument order (265 registered functions on 0.6.3-lineage forks).
+- Optional: a Psych Engine adapter can migrate existing Lua mod scripts to JavaScript, keeping the `FunkinLua` function and callback names.
 - Windows, Linux and macOS build from one CMake tree and run in CI.
 
 Build:
