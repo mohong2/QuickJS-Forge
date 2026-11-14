@@ -49,6 +49,8 @@ QuickJS-Forge 是一个原生桥 + 一个 Haxe 绑定 + 一个 Psych Engine 适�
 
 依赖：CMake ≥ 3.20、C11/C++17 编译器（Windows 用 VS 2022 Build Tools）、Git。
 
+也可以直接下载 [Releases](https://github.com/mohong2/QuickJS-Forge/releases) 里的预编译包：解压后是 `lib/`（静态库）+ `include/`（头文件），附带 `SHA256SUMS.txt`。
+
 ```bash
 git clone --recursive <repo>
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
